@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title>Heatmaps</title>
+    <style>
+      html, body, #map-canvas {
+        height: 100%;
+        margin: 0px;
+        padding: 0px
+      }
+      #panel {
+        position: absolute;
+        top: 5px;
+        left: 50%;
+        margin-left: -180px;
+        z-index: 5;
+        background-color: #fff;
+        padding: 5px;
+        border: 1px solid #999;
+      }
+
+      #bottomPanel {
+        width: 100%;
+        margin: 0 auto;
+        position: absolute; 
+        bottom: 2.5em;
+      }
+
+      #timeInfo{
+        border-radius: 4px;
+        border: solid 2px #ccc;
+        background-color: #fff;
+        display: block;
+        padding: 5px;
+        position: relative;
+        text-align: center;
+        width: 1000px;
+        z-index: 99;
+      }
+    </style>
+    <script type="text/javascript", src="sexLogOut.txt"></script>
+    <script src="http://code.jquery.com/jquery-1.9.1.js"></script>
+    <script src="http://code.jquery.com/ui/1.10.3/jquery-ui.js"></script>
+
+    <link rel="stylesheet" href="http://code.jquery.com/ui/1.10.3/themes/smoothness/jquery-ui.css" />
+
+    <script src="https://maps.googleapis.com/maps/api/js?v=3.exp&sensor=false&libraries=visualization"></script>
+    <script>
+var map, pointarray, heatmap;
+
+var taxiData = [];
+for (i in sqDataArray) {
+    taxiData.push(new google.maps.LatLng(sqDataArray[i].lat, sqDataArray[i].long));
+}
+
+function initialize() {
+  var mapOptions = {
+    zoom: 15,
+    center: new google.maps.LatLng(42.376807,-71.118242),
+    mapTypeId: google.maps.MapTypeId.MAP
+  };
+
+  map = new google.maps.Map(document.getElementById('map-canvas'),
+      mapOptions);
+
+  var pointArray = new google.maps.MVCArray(taxiData);
+
+  heatmap = new google.maps.visualization.HeatmapLayer({
+    data: pointArray
+  });
+
+  heatmap.setMap(map);
+}
+
+function toggleHeatmap() {
+  heatmap.setMap(heatmap.getMap() ? null : map);
+}
+
+function changeGradient() {
+  var gradient = [
+    'rgba(0, 255, 255, 0)',
+    'rgba(0, 255, 255, 1)',
+    'rgba(0, 191, 255, 1)',
+    'rgba(0, 127, 255, 1)',
+    'rgba(0, 63, 255, 1)',
+    'rgba(0, 0, 255, 1)',
+    'rgba(0, 0, 223, 1)',
+    'rgba(0, 0, 191, 1)',
+    'rgba(0, 0, 159, 1)',
+    'rgba(0, 0, 127, 1)',
+    'rgba(63, 0, 91, 1)',
+    'rgba(127, 0, 63, 1)',
+    'rgba(191, 0, 31, 1)',
+    'rgba(255, 0, 0, 1)'
+  ]
+  heatmap.setOptions({
+    gradient: heatmap.get('gradient') ? null : gradient
+  });
+}
+
+function changeRadius() {
+  heatmap.setOptions({radius: heatmap.get('radius') ? null : 20});
+}
+
+function changeOpacity() {
+  heatmap.setOptions({opacity: heatmap.get('opacity') ? null : 0.2});
+}
+
+google.maps.event.addDomListener(window, 'load', initialize);
+
+
+  $(function() {
+    var firstDate = new Date("1/1/2012 EST");
+    var ms2day = 60000*60*24;
+    var window = 6;
+    $( "#slider-range" ).slider({
+      max: 730,
+      value: 350,
+      slide: function( event, ui ) {
+	var startDay = new Date(firstDate.getTime() + ui.value*ms2day);
+	var endDay = new Date(firstDate.getTime() + (ui.value + window)*ms2day);
+
+        $( "#startDate" ).val( startDay );
+        $( "#endDate" ).val( endDay );        
+
+    	taxiData = [];
+	for (i in sqDataArray) {
+		if (sqDataArray[i].date > startDay & sqDataArray[i].date < endDay) {
+			taxiData.push(new google.maps.LatLng(sqDataArray[i].lat, sqDataArray[i].long));
+		}
+	}
+	pointArray = new google.maps.MVCArray(taxiData);
+	heatmap.setData(pointArray)
+      }
+    });
+    var firstStartDay = new Date(firstDate.getTime() + $( "#slider-range" ).slider( "value" )*ms2day);
+    var firstEndDay = new Date(firstDate.getTime() + ($( "#slider-range" ).slider( "value" ) + window)*ms2day);
+    $( "#startDate" ).val(firstStartDay)
+    $( "#endDate" ).val(firstEndDay)
+  });
+  
+    </script>
+  </head>
+
+  <body>
+    <div id="panel">
+      <button onclick="toggleHeatmap()">Toggle Heatmap</button>
+      <button onclick="changeGradient()">Change gradient</button>
+      <button onclick="changeRadius()">Change radius</button>
+      <button onclick="changeOpacity()">Change opacity</button>
+    </div>
+    <div id="map-canvas"></div>
+    
+<div id="bottomPanel">
+  <label for="startDate">Start date:</label>
+  <input type="text" id="startDate" style="border: 0; color: #f6931f; font-weight: bold;" />
+  <label for="startDate">End date:</label>
+  <input type="text" id="endDate" style="border: 0; color: #f6931f; font-weight: bold;" />
+</p>
+ 
+<div id="slider-range"></div>
+     
+    
+  </body>
+</html>
